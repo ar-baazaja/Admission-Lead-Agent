@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An assistant that replies to student enquiries on WhatsApp in seconds and hands counsellors leads that are ready to call.">
+<style>
+html{color-scheme:light}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Admissions Lead Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: slim top bar, left-aligned headline, then one working surface: student phone beside the counsellor's lead record */
+:root{
+  --bg:#f5f6f4; --paper:#ffffff; --ink:#18222e; --muted:#5f6b77; --line:#e1e4e0;
+  --green:#0b6e4f; --green-soft:#e3f1ea; --chat:#eef1ec; --me:#dcefe4;
+  --hot:#b4410f; --hot-soft:#fbe7dc; --warm:#8a6100; --warm-soft:#f8efd2; --cold:#3a5784; --cold-soft:#e2e9f4;
+  --font:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171d; --paper:#1a2129; --ink:#e8ecef; --muted:#9aa5b0; --line:#2b343e;
+  --green:#4cc394; --green-soft:#16352a; --chat:#151c23; --me:#1d3a2e;
+  --hot:#f39268; --hot-soft:#3a2219; --warm:#e6c15a; --warm-soft:#352d14; --cold:#94b2e3; --cold-soft:#1c2a3e;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171d; --paper:#1a2129; --ink:#e8ecef; --muted:#9aa5b0; --line:#2b343e;
+  --green:#4cc394; --green-soft:#16352a; --chat:#151c23; --me:#1d3a2e;
+  --hot:#f39268; --hot-soft:#3a2219; --warm:#e6c15a; --warm-soft:#352d14; --cold:#94b2e3; --cold-soft:#1c2a3e;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.in{max-width:1080px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+
+/* top bar */
+.bar{border-bottom:1px solid var(--line);background:var(--paper)}
+.bar .in{display:flex;justify-content:space-between;align-items:center;padding-block:16px;gap:16px;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:-.01em}
+.bar small{color:var(--muted);font-size:14px}
+
+/* hero */
+.hero{padding-block:64px 40px}
+h1{font-size:clamp(34px,5.2vw,56px);line-height:1.04;letter-spacing:-.035em;font-weight:700;margin:0;max-width:16ch;text-wrap:balance}
+.sub{color:var(--muted);font-size:18px;margin:18px 0 0;max-width:48ch}
+.actions{display:flex;gap:10px;margin-top:28px;flex-wrap:wrap}
+.btn{font:inherit;font-size:15px;font-weight:600;padding:12px 20px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn.solid{background:var(--green);border-color:var(--green);color:var(--paper)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:focus-visible,.replies button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+/* work surface */
+.surface{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+@media (max-width:840px){.surface{grid-template-columns:minmax(0,1fr)}}
+.phone{background:var(--chat);border-right:1px solid var(--line);display:flex;flex-direction:column}
+@media (max-width:840px){.phone{border-right:0;border-bottom:1px solid var(--line)}}
+.ph-head{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);background:var(--paper)}
+.dot{width:34px;height:34px;border-radius:50%;background:var(--green-soft);position:relative}
+.dot::after{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--green)}
+.ph-head strong{display:block;font-size:15px;line-height:1.2}
+.ph-head span{font-size:13px;color:var(--muted)}
+.chat{height:500px;overflow-y:auto;padding:18px 14px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth}
+.msg{max-width:86%;padding:9px 12px;border-radius:14px;font-size:14.5px;line-height:1.45;background:var(--paper);align-self:flex-start;animation:in .2s ease-out}
+.msg.me{background:var(--me);align-self:flex-end}
+.msg.faq{box-shadow:inset 3px 0 0 var(--green)}
+.msg em{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-bottom:2px}
+.typing{align-self:flex-start;background:var(--paper);padding:11px 14px;border-radius:14px;display:flex;gap:4px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+.replies{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px 16px;min-height:62px;border-top:1px solid var(--line);background:var(--paper)}
+.replies button{font:inherit;font-size:14px;font-weight:500;border:1px solid var(--green);background:transparent;color:var(--green);padding:7px 13px;border-radius:999px;cursor:pointer}
+.replies button:hover{background:var(--green-soft)}
+@keyframes in{from{opacity:.2;transform:translateY(3px)}to{opacity:1;transform:none}}
+@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+
+.record{padding:28px 32px;display:flex;flex-direction:column;gap:28px;min-width:0}
+@media (max-width:480px){.record{padding:22px 18px}}
+.rec-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.rec-head h2{font-size:24px;letter-spacing:-.02em;margin:0;line-height:1.2}
+.rec-head p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.pill{font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;background:var(--bg);color:var(--muted);white-space:nowrap}
+.pill.hot{background:var(--hot-soft);color:var(--hot)}.pill.warm{background:var(--warm-soft);color:var(--warm)}.pill.cold{background:var(--cold-soft);color:var(--cold)}
+.rows{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px}
+@media (max-width:560px){.rows{grid-template-columns:minmax(0,1fr)}}
+.row{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);min-width:0}
+.row dt{color:var(--muted);font-size:14px}
+.row dd{margin:0;font-weight:600;font-size:14.5px;text-align:right;transition:color .4s}
+.row dd.empty{color:var(--line)}
+.row dd.new{color:var(--green)}
+.meter{display:flex;align-items:center;gap:18px}
+.track{flex:1;height:8px;background:var(--bg);border-radius:4px;position:relative}
+.track span{position:absolute;inset:0 auto 0 0;width:0;background:var(--green);border-radius:4px;transition:width .5s ease}
+.track i{position:absolute;left:75%;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.35}
+.meter b{font-size:32px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;min-width:2.4ch;text-align:right}
+.meter-cap{font-size:13px;color:var(--muted);margin-top:6px}
+.handoff h3{font-size:16px;margin:0 0 10px}
+.summary{margin:0 0 16px;font-size:15px;max-width:62ch}
+.sched{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.sched li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.sched span{color:var(--muted);font-variant-numeric:tabular-nums}
+.idle{color:var(--muted);font-size:15px;margin:0}
+
+/* features */
+.features{padding-block:72px 56px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px}
+@media (max-width:760px){.features{grid-template-columns:minmax(0,1fr);gap:28px}}
+.features h3{font-size:18px;letter-spacing:-.01em;margin:0 0 6px}
+.features p{margin:0;color:var(--muted);font-size:15px;max-width:34ch}
+footer{border-top:1px solid var(--line)}
+footer .in{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:22px;font-size:14px;color:var(--muted)}
+footer strong{color:var(--ink);font-weight:600}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.chat{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="in">
+  <span class="brand">Arbaz Awan</span>
+  <small>Prepared for Global Study Online</small>
+</div></div>
+
+<main class="in">
+  <section class="hero">
+    <h1>Every student enquiry answered, qualified and booked.</h1>
+    <p class="sub">An assistant that replies on WhatsApp in seconds and hands your counsellors leads that are ready to call.</p>
+    <div class="actions">
+      <button class="btn solid" id="auto" type="button">Play the demo</button>
+      <button class="btn" id="reset" type="button">Start over</button>
+    </div>
+  </section>
+
+  <section class="surface" aria-label="Demo">
+    <div class="phone">
+      <div class="ph-head"><div class="dot" aria-hidden="true"></div><div><strong>Admissions assistant</strong><span id="presence">Online</span></div></div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <div class="replies" id="replies"></div>
+    </div>
+
+    <div class="record">
+      <div class="rec-head">
+        <div><h2>Rafi Hasan</h2><p>New enquiry from a Facebook ad</p></div>
+        <span class="pill" id="status">In conversation</span>
+      </div>
+      <dl class="rows">
+        <div class="row"><dt>Destination</dt><dd class="empty" id="f-dest">—</dd></div>
+        <div class="row"><dt>Qualification</dt><dd class="empty" id="f-qual">—</dd></div>
+        <div class="row"><dt>English test</dt><dd class="empty" id="f-eng">—</dd></div>
+        <div class="row"><dt>Yearly budget</dt><dd class="empty" id="f-bud">—</dd></div>
+        <div class="row"><dt>Intake</dt><dd class="empty" id="f-int">—</dd></div>
+        <div class="row"><dt>Call booked</dt><dd class="empty" id="f-call">—</dd></div>
+      </dl>
+      <div>
+        <div class="meter"><div class="track"><span id="fill"></span><i></i></div><b id="num">0</b></div>
+        <p class="meter-cap">Lead score. Above the marker, a counsellor is alerted right away.</p>
+      </div>
+      <div class="handoff" id="handoff"><p class="idle">The counsellor summary appears here when the chat ends.</p></div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div><h3>Replies at any hour</h3><p>WhatsApp, Messenger, Instagram and your website. No enquiry waits for office hours.</p></div>
+    <div><h3>Speaks from your data</h3><p>Programmes, intakes, test scores and visa rules you approve. Anything unclear goes to a person.</p></div>
+    <div><h3>Lands in your system</h3><p>Every chat, score and next step saved to your CRM or a Google Sheet.</p></div>
+  </section>
+</main>
+
+<footer><div class="in">
+  <span><strong>Arbaz Awan</strong>, AI agents and automation</span>
+  <span>arbazawan2004@gmail.com</span>
+</div></footer>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id), chat=$('chat'), replies=$('replies');
+  let score=0, step=0, timers=[], auto=false, p={};
+  const later=(f,ms)=>timers.push(setTimeout(f,ms));
+  const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const ENG=[["IELTS 6.5+",25,"IELTS 6.5+"],["IELTS 6.0",20,"IELTS 6.0"],["Not taken yet",5,"Not taken"],["Do I need a bank statement?",0,null,"faq"]];
+
+  const flow=[
+    {bot:["Hi Rafi, thanks for reaching out. I can check your eligibility in about a minute.","Which country are you considering?"],f:'f-dest',k:'dest',
+     o:[["Denmark",15,"Denmark"],["UK",15,"UK"],["Canada",15,"Canada"],["Not sure yet",5,"Undecided"]]},
+    {bot:["What is your highest completed qualification?"],f:'f-qual',k:'qual',
+     o:[["HSC / A-levels",15,"HSC"],["Bachelor's",20,"Bachelor's"],["Master's",20,"Master's"]]},
+    {bot:["Have you taken IELTS or another English test?"],f:'f-eng',k:'eng',o:ENG.slice()},
+    {bot:["What tuition budget per year works for you?"],f:'f-bud',k:'bud',
+     o:[["Under ৳8 lakh",10,"Under ৳8 lakh"],["৳8–15 lakh",20,"৳8–15 lakh"],["Over ৳15 lakh",25,"Over ৳15 lakh"]]},
+    {bot:["Which intake are you aiming for?"],f:'f-int',k:'int',
+     o:[["Jan 2027",15,"Jan 2027"],["Sep 2027",15,"Sep 2027"],["Not decided",5,"Undecided"]]},
+    {bot:["You look like a good fit. A counsellor can walk you through universities and visa steps on a free 20-minute call.","Which time suits you?"],f:'f-call',k:'call',
+     o:[["Tomorrow, 11 am",0,"Tue 11:00"],["Tomorrow, 4 pm",0,"Tue 16:00"],["Call me later",0,"Callback"]]}
+  ];
+
+  function typing(){const t=document.createElement('div');t.className='typing';t.innerHTML='<i></i><i></i><i></i>';chat.appendChild(t);chat.scrollTop=chat.scrollHeight;return t}
+  function say(text,me,faq){const m=document.createElement('div');m.className='msg'+(me?' me':'')+(faq?' faq':'');
+    m.innerHTML=(faq?'<em>Answered from your FAQ</em>':'')+esc(text);chat.appendChild(m);chat.scrollTop=chat.scrollHeight}
+  function bot(lines,done){let i=0;(function n(){if(i>=lines.length)return done&&done();const t=typing();later(()=>{t.remove();say(lines[i++]);later(n,220)},600)})()}
+  function buttons(opts){replies.innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.type='button';b.textContent=o[0];b.onclick=()=>pick(o);replies.appendChild(b)})}
+  function field(id,v){const e=$(id);e.textContent=v;e.className='new';later(()=>e.className='',900)}
+  function setScore(v){score=Math.min(100,v);$('fill').style.width=score+'%';$('num').textContent=score}
+  function status(){const s=$('status');
+    if(score>=75){s.className='pill hot';s.textContent='Call today'}else if(score>=50){s.className='pill warm';s.textContent='Follow up'}else{s.className='pill cold';s.textContent='Nurture'}}
+
+  function ask(){const q=flow[step];replies.innerHTML='';bot(q.bot,()=>{buttons(q.o);
+    if(auto){const c=q.o.find(o=>!o[3]&&o[1]>=15)||q.o[0];later(()=>pick(c),900)}})}
+
+  function pick(o){replies.innerHTML='';say(o[0],true);const q=flow[step];
+    if(o[3]==='faq'){q.o=q.o.filter(x=>!x[3]);const t=typing();later(()=>{t.remove();
+      say("For most Denmark programmes you don't need one to apply. Proof of funds can come up at the visa stage, and your counsellor will confirm for your university.",false,true);
+      later(()=>{say("Have you taken IELTS yet?");buttons(q.o)},450)},850);return}
+    p[q.k]=o[2];field(q.f,o[2]);step++;setScore(score+o[1]);
+    step<flow.length?later(ask,350):finish()}
+
+  function finish(){status();
+    const booked=p.call!=='Callback';
+    bot([booked?"Done. You're booked for "+p.call.replace('Tue ','tomorrow at ')+", and I'll remind you an hour before.":"Noted. A counsellor will call you within two hours.","I've also sent the document checklist for "+(p.dest==='Undecided'?'your options':p.dest)+"."],()=>{
+      const hot=score>=75, noTest=p.eng==='Not taken';
+      $('handoff').innerHTML='<h3>Handed to Nusrat</h3>'+
+        '<p class="summary">Rafi wants '+esc(p.dest==='Undecided'?'advice on a destination':p.dest)+' for '+esc(p.int==='Undecided'?'an undecided intake':p.int)+'. '+esc(p.qual)+', '+(noTest?'no English test yet':esc(p.eng))+', budget '+esc(p.bud)+'.'+(noTest?' Needs IELTS before applying.':'')+(hot?' Strong fit, call first.':' Worth nurturing before a hard sell.')+'</p>'+
+        '<ul class="sched">'+
+        '<li><span>Now</span>'+(hot?'Lead card sent to Nusrat on WhatsApp':'Added to the follow-up list')+'</li>'+
+        (booked?'<li><span>1 hr before</span>Call reminder to Rafi</li>':'<li><span>2 hrs</span>Callback due</li>')+
+        '<li><span>Day 2</span>Checklist reminder if documents are missing</li>'+
+        '<li><span>Day 5</span>'+(noTest?'IELTS prep options and next test dates':'Scholarships and deadlines')+'</li>'+
+        '</ul>';
+      $('presence').textContent='Online';auto=false;$('auto').disabled=false;
+    })}
+
+  function reset(){timers.forEach(clearTimeout);timers=[];chat.innerHTML='';replies.innerHTML='';score=0;step=0;p={};flow[2].o=ENG.slice();
+    ['f-dest','f-qual','f-eng','f-bud','f-int','f-call'].forEach(id=>{const e=$(id);e.textContent='—';e.className='empty'});
+    $('handoff').innerHTML='<p class="idle">The counsellor summary appears here when the chat ends.</p>';
+    $('status').className='pill';$('status').textContent='In conversation';setScore(0);
+    say("Hi, I saw your Denmark post. Can I apply?",true);later(ask,500)}
+
+  $('reset').onclick=()=>{auto=false;$('auto').disabled=false;reset()};
+  $('auto').onclick=()=>{auto=true;$('auto').disabled=true;reset()};
+  reset();
+})();
+</script>
+
+</body>
+</html>
